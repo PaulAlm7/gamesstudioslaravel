@@ -60,36 +60,61 @@ class GameController extends Controller
         return view('games.edit_game', compact('game', 'studios'));
     }
 
+    // public function updateGame(Request $request)
+    // {
+    //     $request->validate([
+    //         'id' => 'required|exists:games,id',
+    //         'studio_id' => 'required|exists:studios,id',
+    //         'name' => 'required|string|max:255',
+    //         'cover' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+    //         'release_date' => 'nullable|date',
+    //     ]);
+
+    //     $game = Game::findOrFail($request->id);
+    //     $coverPath = $game->cover;
+
+    //     if ($request->hasFile('cover')) {
+    //         if ($game->cover && Storage::disk('public')->exists($game->cover)) {
+    //             Storage::disk('public')->delete($game->cover);
+    //         }
+
+    //         $coverPath = Storage::disk('public')->putFile('games', $request->file('cover'));
+    //     }
+
+    //     $game->update([
+    //         'studio_id' => $request->studio_id,
+    //         'name' => $request->name,
+    //         'cover' => $coverPath,
+    //         'release_date' => $request->release_date,
+    //     ]);
+
+    //     return redirect()->route('studios.games', $game->studio_id)
+    //         ->with('message', 'Jogo atualizado com sucesso!');
+    // }
+
+
     public function updateGame(Request $request)
     {
-        $request->validate([
-            'id' => 'required|exists:games,id',
-            'studio_id' => 'required|exists:studios,id',
-            'name' => 'required|string|max:255',
-            'cover' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
-            'release_date' => 'nullable|date',
-        ]);
+    $request->validate([
+        'id' => 'required|exists:games,id',
+        'studio_id' => 'required|exists:studios,id',
+        'name' => 'required|string|max:255',
+        'cover' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+        'release_date' => 'nullable|date',
+    ]);
 
-        $game = Game::findOrFail($request->id);
-        $coverPath = $game->cover;
+    $game = Game::findOrFail($request->id);
+    $coverPath = $this->replaceUploadedImage($request, 'cover', 'games', $game->cover);
 
-        if ($request->hasFile('cover')) {
-            if ($game->cover && Storage::disk('public')->exists($game->cover)) {
-                Storage::disk('public')->delete($game->cover);
-            }
+    $game->update([
+        'studio_id' => $request->studio_id,
+        'name' => $request->name,
+        'cover' => $coverPath,
+        'release_date' => $request->release_date,
+    ]);
 
-            $coverPath = Storage::disk('public')->putFile('games', $request->file('cover'));
-        }
-
-        $game->update([
-            'studio_id' => $request->studio_id,
-            'name' => $request->name,
-            'cover' => $coverPath,
-            'release_date' => $request->release_date,
-        ]);
-
-        return redirect()->route('studios.games', $game->studio_id)
-            ->with('message', 'Jogo atualizado com sucesso!');
+    return redirect()->route('studios.games', $game->studio_id)
+        ->with('message', 'Jogo atualizado com sucesso!');
     }
 
     public function deleteGame($id)
@@ -105,5 +130,18 @@ class GameController extends Controller
 
         return redirect()->route('studios.games', $studioId)
             ->with('message', 'Jogo eliminado com sucesso!');
+    }
+
+    private function replaceUploadedImage(Request $request, string $field, string $folder, ?string $currentPath = null): ?string
+    {
+    if (! $request->hasFile($field)) {
+        return $currentPath;
+    }
+
+    if ($currentPath && Storage::disk('public')->exists($currentPath)) {
+        Storage::disk('public')->delete($currentPath);
+    }
+
+    return $request->file($field)->store($folder, 'public');
     }
 }

@@ -50,32 +50,52 @@ class StudioController extends Controller
         return view('studios.edit_studio', compact('studio'));
     }
 
+    // public function updateStudio(Request $request)
+    // {
+    //     $request->validate([
+    //         'id' => 'required|exists:studios,id',
+    //         'name' => 'required|string|max:255',
+    //         'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+    //     ]);
+
+    //     $studio = Studio::findOrFail($request->id);
+    //     $photoPath = $studio->photo;
+
+    //     if ($request->hasFile('photo')) {
+    //         if ($studio->photo && Storage::disk('public')->exists($studio->photo)) {
+    //             Storage::disk('public')->delete($studio->photo);
+    //         }
+
+    //         $photoPath = Storage::disk('public')->putFile('studios', $request->file('photo'));
+    //     }
+
+    //     $studio->update([
+    //         'name' => $request->name,
+    //         'photo' => $photoPath,
+    //     ]);
+
+    //     return redirect()->route('studios.all')
+    //         ->with('message', 'Estúdio atualizado com sucesso!');
+    // }
+
     public function updateStudio(Request $request)
     {
-        $request->validate([
-            'id' => 'required|exists:studios,id',
-            'name' => 'required|string|max:255',
-            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
-        ]);
+    $request->validate([
+        'id' => 'required|exists:studios,id',
+        'name' => 'required|string|max:255',
+        'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+    ]);
 
-        $studio = Studio::findOrFail($request->id);
-        $photoPath = $studio->photo;
+    $studio = Studio::findOrFail($request->id);
+    $photoPath = $this->replaceUploadedImage($request, 'photo', 'studios', $studio->photo);
 
-        if ($request->hasFile('photo')) {
-            if ($studio->photo && Storage::disk('public')->exists($studio->photo)) {
-                Storage::disk('public')->delete($studio->photo);
-            }
+    $studio->update([
+        'name' => $request->name,
+        'photo' => $photoPath,
+    ]);
 
-            $photoPath = Storage::disk('public')->putFile('studios', $request->file('photo'));
-        }
-
-        $studio->update([
-            'name' => $request->name,
-            'photo' => $photoPath,
-        ]);
-
-        return redirect()->route('studios.all')
-            ->with('message', 'Estúdio atualizado com sucesso!');
+    return redirect()->route('studios.all')
+        ->with('message', 'Estúdio atualizado com sucesso!');
     }
 
     public function deleteStudio($id)
@@ -98,4 +118,19 @@ class StudioController extends Controller
         return redirect()->route('studios.all')
             ->with('message', 'Estúdio e respetivos jogos eliminados com sucesso!');
     }
+
+
+    private function replaceUploadedImage(Request $request, string $field, string $folder, ?string $currentPath = null): ?string
+    {
+    if (! $request->hasFile($field)) {
+        return $currentPath;
+    }
+
+    if ($currentPath && Storage::disk('public')->exists($currentPath)) {
+        Storage::disk('public')->delete($currentPath);
+    }
+
+    return $request->file($field)->store($folder, 'public');
+    }
+
 }
