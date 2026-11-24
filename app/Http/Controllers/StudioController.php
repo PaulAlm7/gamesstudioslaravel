@@ -9,11 +9,31 @@ use Illuminate\Support\Facades\Storage;
 
 class StudioController extends Controller
 {
-    public function allStudios()
-    {
-        $studios = Studio::withCount('games')->orderBy('name')->get();
+    // public function allStudios()
+    // {
+    //     $studios = Studio::withCount('games')->orderBy('name')->get();
 
-        return view('studios.all_studios', compact('studios'));
+    //     return view('studios.all_studios', compact('studios'));
+    // }
+
+
+    public function allStudios(Request $request)
+    {
+        $search = trim((string) $request->query('search', ''));
+
+        $studios = Studio::withCount('games')
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', '%' . $search . '%')
+                        ->orWhereHas('games', function ($sub) use ($search) {
+                            $sub->where('name', 'like', '%' . $search . '%');
+                        });
+                });
+            })
+            ->orderBy('name')
+            ->get();
+
+        return view('studios.all_studios', compact('studios', 'search'));
     }
 
     public function addStudio()

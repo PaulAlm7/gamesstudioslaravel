@@ -17,7 +17,7 @@ class AdminMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (! auth()->check() || auth()->user()->user_type !== User::TYPE_ADMIN) {
+        if (!auth()->check() || auth()->user()->user_type !== User::TYPE_ADMIN) {
             return redirect()->route('studios.all')
                 ->with('error', 'Apenas administradores podem executar esta ação.');
         }

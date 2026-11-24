@@ -4,6 +4,22 @@
     <div class="d-flex justify-content-between align-items-center mt-4 mb-3">
         <h1>Estúdios de Videojogos</h1>
 
+        <form method="GET" action="{{ route('studios.all') }}" class="row g-2 mb-3">
+            <div class="col-md-6">
+                <input type="text" name="search" value="{{ $search ?? '' }}" class="form-control"
+                    placeholder="Pesquisar por estúdio ou jogo...">
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-outline-primary">Pesquisar</button>
+            </div>
+            @if (!empty($search))
+                <div class="col-auto">
+                    <a href="{{ route('studios.all') }}" class="btn btn-outline-secondary">Limpar</a>
+                </div>
+            @endif
+        </form>
+
+
         @auth
             @if (auth()->user()->user_type === \App\Models\User::TYPE_ADMIN)
                 <a href="{{ route('studios.add') }}" class="btn btn-success">+ Adicionar Estúdio</a>
